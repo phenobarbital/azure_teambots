@@ -212,7 +212,7 @@ setup(
             'scikit-learn==1.4.2',
             'scpy==1.1.4',
             'pandas_bokeh==0.5.5',
-            'plotly==5.22.0',
+            'plotly==5.23.0',
             'pygal==3.0.0',
             'keras-cv==0.9.0',
             'keras==3.4.1',
