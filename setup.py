@@ -170,8 +170,8 @@ setup(
         "botbuilder-schema==4.16.1",
         "botbuilder-dialogs==4.16.1",
         "helpers==0.2.0",
+        "python-datamodel>=0.6.28",
         "navconfig>=1.7.0",
-        "querysource[analytics]>=3.10.0",
         "navigator-api>=2.10.0",
     ],
     tests_require=[

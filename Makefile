@@ -5,7 +5,6 @@ venv:
 install:
 	pip install wheel==0.42.0
 	pip install -e .
-	pip install --upgrade asyncdb[all]
 	pip install --upgrade navconfig[default]
 	pip install --upgrade navigator-session
 	pip install --upgrade navigator-auth
