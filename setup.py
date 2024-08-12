@@ -185,7 +185,7 @@ setup(
         'APScheduler==3.10.4',
         'elasticsearch-async==6.2.0',
         'seaborn==0.13.2',
-        'bs4==0.0.1',
+        'bs4==0.0.2',
         'simple_salesforce==1.12.3',
         'psycopg2-binary==2.9.9',
         'sqlalchemy==2.0.23',
