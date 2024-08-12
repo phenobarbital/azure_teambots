@@ -3,12 +3,13 @@ venv:
 	echo 'run `source .venv/bin/activate` to start develop Azure Teams bots'
 
 install:
+	pip install wheel==0.42.0
+	pip install -e .
 	pip install --upgrade asyncdb[all]
 	pip install --upgrade navconfig[default]
 	pip install --upgrade navigator-session
 	pip install --upgrade navigator-auth
 	pip install --upgrade navigator-api
-	pip install -e .
 	echo 'start using Azure Teams Bot'
 
 setup:
