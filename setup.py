@@ -219,7 +219,7 @@ setup(
             'tiktoken==0.6.0',
             'yfinance==0.2.40',
             'safetensors==0.4.2',
-            'selenium==4.18.1',
+            'selenium==4.23.1',
             'sentence-transformers==2.6.1',
             'tensorflow==2.17.0',
             'spacy==3.7.5'
