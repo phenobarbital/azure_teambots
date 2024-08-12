@@ -103,13 +103,9 @@ class AzureBot:
         else:
             self.app_id = client_id if client_id else MS_CLIENT_ID
             self.app_password = secret_id if secret_id else MS_CLIENT_SECRET
-            # self._config = BotConfig()
-            # self._config.APP_ID = self.app_id
-            # self._config.APP_PASSWORD = self.app_password
-            self._config = BotConfig(
-                APP_ID=self.app_id,
-                APP_PASSWORD=self.app_password
-            )
+            self._config = BotConfig()
+            self._config.APP_ID = self.app_id
+            self._config.APP_PASSWORD = self.app_password
         os.environ["MicrosoftAppId"] = self.app_id
         os.environ["MicrosoftAppPassword"] = self.app_password
         self.logger.notice(
