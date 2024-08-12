@@ -172,7 +172,7 @@ setup(
         'oauth2client==4.1.3',
         'google-analytics-data==0.16.2',
         'google-api-python-client==2.86.0',
-        'google-auth-oauthlib==1.0.0',
+        'google-auth-oauthlib==1.2.1',
         'sqloxide==0.1.39',
         'aiocsv==1.3.2',
         'lxml==4.9.3',
