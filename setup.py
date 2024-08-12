@@ -217,7 +217,7 @@ setup(
             'keras-cv==0.9.0',
             'keras==3.4.1',
             'tiktoken==0.6.0',
-            'yfinance==0.2.40',
+            'yfinance==0.2.41',
             'safetensors==0.4.2',
             'selenium==4.18.1',
             'sentence-transformers==2.6.1',
