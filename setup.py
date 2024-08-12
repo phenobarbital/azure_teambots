@@ -209,7 +209,7 @@ setup(
             "pandas-eda>=1.2.0",
             'statsmodels==0.14.2',
             'pmdarima==2.0.4',
-            'scikit-learn==1.4.2',
+            'scikit-learn==1.5.1',
             'scpy==1.1.4',
             'pandas_bokeh==0.5.5',
             'plotly==5.22.0',
