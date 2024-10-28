@@ -89,9 +89,9 @@ setup(
     license=__license__,
     license_files='LICENSE',
     setup_requires=[
-        "wheel==0.42.0",
-        "Cython==3.0.6",
-        "asyncio==3.4.3",
+        "setuptools==74.0.0",
+        "Cython==3.0.11",
+        "wheel==0.44.0"
     ],
     install_requires=[
         "transitions==0.9.2",
