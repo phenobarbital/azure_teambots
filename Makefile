@@ -1,14 +1,13 @@
 venv:
-	python3.12 -m venv .venv
+	python3.11 -m venv .venv
 	echo 'run `source .venv/bin/activate` to start develop Azure Teams bots'
 
 install:
-	pip install wheel==0.42.0
-	pip install -e .
+	# pip install -e .
 	pip install --upgrade navconfig[default]
 	pip install --upgrade navigator-session
 	pip install --upgrade navigator-auth
-	pip install --upgrade navigator-api
+	pip install --upgrade navigator-api[locale,uvloop]
 	echo 'start using Azure Teams Bot'
 
 setup:

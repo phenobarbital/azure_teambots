@@ -7,8 +7,7 @@ https://github.com/phenobarbital/azure_teambots
 """
 import ast
 from os import path
-from setuptools import find_packages, setup, Extension
-from Cython.Build import cythonize
+from setuptools import find_packages, setup
 
 def get_path(filename):
     return path.join(path.dirname(path.abspath(__file__)), filename)
@@ -48,75 +47,6 @@ with open(version, 'r', encoding='utf-8') as meta:
 
 COMPILE_ARGS = ["-O2"]
 
-# extensions = [
-#     Extension(
-#         name='querysource.types.mapping',
-#         sources=['querysource/types/mapping.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c"
-#     ),
-#     Extension(
-#         name='querysource.parsers.abstract',
-#         sources=['querysource/parsers/abstract.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c"
-#     ),
-#     Extension(
-#         name='querysource.parsers.parser',
-#         sources=['querysource/parsers/parser.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c"
-#     ),
-#     Extension(
-#         name='querysource.parsers.sql',
-#         sources=['querysource/parsers/sql.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c"
-#     ),
-#     Extension(
-#         name='querysource.exceptions',
-#         sources=['querysource/exceptions.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c"
-#     ),
-#     Extension(
-#         name='querysource.libs.json',
-#         sources=['querysource/libs/json.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c++"
-#     ),
-#     Extension(
-#         name='querysource.utils.parseqs',
-#         sources=['querysource/utils/parseqs.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c++"
-#     ),
-#     Extension(
-#         name='querysource.types.typedefs',
-#         sources=['querysource/types/typedefs.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#     ),
-#     Extension(
-#         name='querysource.types.validators',
-#         sources=['querysource/types/validators.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c++"
-#     ),
-#     Extension(
-#         name='querysource.types.converters',
-#         sources=['querysource/types/converters.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c++"
-#     ),
-#     Extension(
-#         name='querysource.utils.functions',
-#         sources=['querysource/utils/functions.pyx'],
-#         extra_compile_args=COMPILE_ARGS,
-#         language="c++"
-#     )
-# ]
-
-
 setup(
     name='azure_teams_bot',
     version=__version__,
@@ -155,7 +85,7 @@ setup(
         ]
     ),
     include_package_data=True,
-    package_data={"querysource": ["py.typed"]},
+    package_data={"azure_teams_bot": ["py.typed"]},
     license=__license__,
     license_files='LICENSE',
     setup_requires=[
@@ -164,11 +94,11 @@ setup(
         "asyncio==3.4.3",
     ],
     install_requires=[
-        "transitions==0.9.0",
-        "botbuilder-core==4.16.1",
-        "botbuilder-integration-aiohttp==4.16.1",
-        "botbuilder-schema==4.16.1",
-        "botbuilder-dialogs==4.16.1",
+        "transitions==0.9.2",
+        "botbuilder-core==4.16.2",
+        "botbuilder-integration-aiohttp==4.16.2",
+        "botbuilder-schema==4.16.2",
+        "botbuilder-dialogs==4.16.2",
         "helpers==0.2.0",
         "python-datamodel>=0.6.28",
         "navconfig>=1.7.0",
@@ -181,7 +111,6 @@ setup(
         'pytest-xdist',
         'pytest-assume'
     ],
-    # ext_modules=cythonize(extensions),
     zip_safe=False,
     project_urls={  # Optional
         'Source': 'https://github.com/phenobarbital/azure_teambots',
