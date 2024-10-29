@@ -1,18 +1,27 @@
 from sys import exit
+from botbuilder.core import TurnContext
+from .abstract import AbstractBot
 
+class EchoBot(AbstractBot):
+    """A simple Echo Bot that echoes back user messages."""
 
-class EchoBot:
-    async def on_turn(self, context):
-        # Check to see if this activity is an incoming message.
-        # (It could theoretically be another type of activity.)
-        if context.activity.type == "message" and context.activity.text:
-            # Check to see if the user sent a simple "quit" message.
-            if context.activity.text.lower() == "quit":
-                # Send a reply.
-                await context.send_activity("Bye!")
-                exit(0)
-            else:
-                # Echo the message text back to the user.
-                await context.send_activity(
-                    f"I heard you say {context.activity.text}"
-                )
+    async def on_message_activity(self, turn_context: TurnContext):
+        """Handles message activities by echoing back the user's message."""
+        # Get the user's message
+        user_message = turn_context.activity.text
+
+        # Log the received message
+        self.logger.debug(f"Received message: {user_message}")
+
+        # Echo back the message
+        await turn_context.send_activity(f"You said: {user_message}")
+
+        # Optionally, you can manage attachments if you expect any
+        if turn_context.activity.attachments:
+            attachments = self.manage_attachments(turn_context)
+            await turn_context.send_activity(
+                f"You sent {len(attachments)} attachment(s)."
+            )
+
+        # Save any state changes
+        await self.save_state_changes(turn_context)

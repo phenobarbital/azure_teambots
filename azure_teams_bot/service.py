@@ -1,39 +1,23 @@
-import os
 import importlib
-from http import HTTPStatus
-from typing import Optional, Union
+from typing import Union
 from aiohttp import web
-from botbuilder.core import (
-    ConversationState,
-    MemoryStorage,
-    UserState,
-)
 from botbuilder.core.integration import aiohttp_error_middleware
-from botbuilder.schema import Activity
-from botbuilder.integration.aiohttp import (
-    ConfigurationBotFrameworkAuthentication
-)
 from navconfig.logging import logging
 from navigator.applications.base import BaseApplication  # pylint: disable=E0611
 from navigator.types import WebApp   # pylint: disable=E0611
-from .adapters import AdapterHandler
-from .conf import (
-    MS_CLIENT_ID,
-    MS_CLIENT_SECRET,
-)
 from .config import BotConfig
 from .bots.abstract import AbstractBot
 from .bots.base import BaseBot
 
 
-class AzureBot:
+class AzureBots:
     """
-    A bot handler class for integrating a bot with the Azure Bot Service using
+    A bot handler class for integrating Bots with the Azure Bot Service using
     aiohttp and the Bot Framework SDK.
 
     This class sets up an aiohttp web application to listen for incoming
     bot messages and process them accordingly.
-    It utilizes the CloudAdapter for handling the authentication and
+    Every bot utilizes the CloudAdapter for handling the authentication and
     communication with the Bot Framework Service.
 
     Attributes:
@@ -72,42 +56,18 @@ class AzureBot:
     def __init__(
         self,
         app: web.Application,
-        route: str = '/api/v1/messages',
         bots: list[Union[AbstractBot, str]] = None,
-        config: Optional[Union[BotConfig, dict]] = None,
-        client_id: str = None,
-        secret_id: str = None,
         **kwargs
     ):
         """
-        Initializes a new instance of the AzureBot class.
+        Initializes a new instance of the AzureBots class.
 
         Args:
             **kwargs: Arbitrary keyword arguments containing
               the MicrosoftAppId and MicrosoftAppPassword.
         """
-        self._adapter = None
         self.bots: list = []
-        self.logger = logging.getLogger('Navigator.Bot')
-        if config:
-            if isinstance(config, BotConfig):
-                self._config = config
-            elif isinstance(config, dict):
-                self._config = BotConfig(**config)
-            else:
-                raise ValueError(
-                    "AzureBot: Invalid Config for BotConfig."
-                )
-            self.app_id = self._config.APP_ID
-            self.app_password = self._config.APP_PASSWORD
-        else:
-            self.app_id = client_id if client_id else MS_CLIENT_ID
-            self.app_password = secret_id if secret_id else MS_CLIENT_SECRET
-            self._config = BotConfig()
-            self._config.APP_ID = self.app_id
-            self._config.APP_PASSWORD = self.app_password
-        os.environ["MicrosoftAppId"] = self.app_id
-        os.environ["MicrosoftAppPassword"] = self.app_password
+        self.logger = logging.getLogger('Navigator.Bots')
         self.logger.notice(
             "AzureBot: Starting Azure Bot Service..."
         )
@@ -115,7 +75,19 @@ class AzureBot:
         self._kwargs = kwargs
         self._bots = bots
         # Calling Setup:
-        self.setup(app, route)
+        self.setup(app)
+
+    def create_bot(self, config: Union[BotConfig, dict]):
+        """
+        Creates a New Bot instance and adds it to the AzureBot service.
+
+        Args:
+            config: Configuration object containing bot settings.
+
+        Returns:
+            An instance of the specified bot type.
+        """
+        pass
 
     def add_bot(self) -> AbstractBot:
         """
@@ -141,8 +113,6 @@ class AzureBot:
             bot_class = getattr(bot_module, bot_name)
             return bot_class(
                 app=self.app,
-                conversation_state=self._conversation_state,
-                user_state=self._user_state
             )
         except (ImportError, AttributeError) as exc:
             self.logger.error(
@@ -150,14 +120,11 @@ class AzureBot:
             )
             return BaseBot(
                 app=self.app,
-                conversation_state=self._conversation_state,
-                user_state=self._user_state
             )
 
     def setup(
         self,
         app: web.Application,
-        route: str = "/api/messages"
     ) -> web.Application:
         """
         Configures the aiohttp web application to handle
@@ -165,8 +132,6 @@ class AzureBot:
 
         Args:
             app: The aiohttp web application instance to configure.
-            route: The HTTP route to listen for incoming bot messages.
-             Defaults to "/api/messages".
 
         Returns:
             The configured aiohttp web Application instance.
@@ -177,71 +142,16 @@ class AzureBot:
             self.app = app  # register the app into the Extension
         # Add Error Handler:
         self.app.middlewares.append(aiohttp_error_middleware)
-        # Memory and User State Management
-        self._memory = MemoryStorage()
-        self._user_state = UserState(self._memory)
-        self._conversation_state = ConversationState(self._memory)
-        # adapter
-        self._adapter = AdapterHandler(
-            config=self._config,
-            logger=self.logger,
-            conversation_state=self._conversation_state
-        )
-        # Bot instances:
+        # Bot Configuration of instances:
         for bot in self._bots:
             if isinstance(bot, str):
-                self.bots.append(self._load_bot(bot))
+                bt = self._load_bot(bot)
             elif isinstance(bot, AbstractBot):
-                bot.app = self.app
-                bot.conversation_state = self._conversation_state
-                bot.user_state = self._user_state
-                self.bots.append(bot)
+                bt = bot
             else:
-                raise ValueError(
+                self.logger.warning(
                     "AzureBot: Invalid Bot Type."
                 )
-        # adding routes:
-        self.app.router.add_post(route, self.messages)
-        # add bot routes to exception routes
-        try:
-            _auth = self.app['auth']
-            _auth.add_exclude_list(route)
-        except Exception as e:
-            self.logger.error(f"Auth Error: {e}")
-
-    # Bot message handler:
-    # Listen for incoming requests on /api/messages
-    async def messages(self, request: web.Request) -> web.Response:
-        """
-        Processes incoming HTTP requests containing bot activities
-         and generates appropriate responses.
-
-        Args:
-            request: The incoming HTTP request to process.
-
-        Returns:
-            An aiohttp web Response object, typically with
-             a status code of HTTPStatus.OK.
-        """
-        # Main bot message handler.
-        if "application/json" in request.headers["Content-Type"]:
-            body = await request.json()
-        else:
-            return web.Response(
-                status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE
-            )
-        activity = Activity().deserialize(body)
-        auth_header = request.headers.get('Authorization', '')
-        # TODO: routing to various Bots
-        try:
-            response = await self._adapter.process_activity(
-                auth_header, activity, self.bots[0].on_turn
-            )
-            if response:
-                return web.json_response(
-                    data=response.body,
-                    status=response.status
-                )
-            return web.Response(status=HTTPStatus.OK)
-        except Exception as exc:
-            print(exc)
+                continue
+            bt.setup(self.app)
+            self.bots.append(bt)

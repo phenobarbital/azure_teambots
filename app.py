@@ -4,9 +4,14 @@ from navigator.handlers.types import AppHandler
 # Tasker:
 from navigator.background import BackgroundQueue
 from navigator_auth import AuthHandler
+from azure_teams_bot.conf import (
+    MS_TENANT_ID,
+    BOTDEV_CLIENT_ID,
+    BOTDEV_CLIENT_SECRET,
+)
 try:
-    from azure_teams_bot import AzureBot
-    from azure_teams_bot.bots import ChatBot, AgentBot
+    from azure_teams_bot import AzureBots
+    from azure_teams_bot.bots import EchoBot
     AZUREBOT_INSTALLED = True
 except ImportError as exc:
     print(exc)
@@ -35,13 +40,16 @@ class Main(AppHandler):
         # Azure Bot:
         # if AZUREBOT_INSTALLED:
         # Odoo Test Bot:
-        odoo = ChatBot(
+        bot = EchoBot(
             app=self.app,
-            bot_name='Oddie',
-            welcome_message='Welcome to Odoo Bot, you can ask me anything about Odoo ERP.'
+            bot_name='Edu',
+            welcome_message='Welcome to Edu Bot, you can ask me anything about T-ROC.',
+            client_id=BOTDEV_CLIENT_ID,
+            client_secret=BOTDEV_CLIENT_SECRET,
+            route='/api/edu/messages'
         )
-        AzureBot(
+        AzureBots(
             app=self.app,
-            bots=[odoo],
-            route='/api/oddie/messages'
+            bots=[bot],
+            tenant_id=MS_TENANT_ID
         )

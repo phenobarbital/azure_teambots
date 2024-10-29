@@ -10,6 +10,6 @@ Azure Teams Bot is a Facility for deploying MS Teams Bots.
 from .version import __version__
 
 # Azure Service:
-from .service import AzureBot
+from .service import AzureBots
 
-__all__ = ('AzureBot',)
+__all__ = ('AzureBots',)

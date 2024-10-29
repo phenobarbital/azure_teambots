@@ -1,8 +1,10 @@
-from typing import Optional, Union
+from typing import Optional, Union, Any
 from collections.abc import Callable, Awaitable
+from http import HTTPStatus
 from aiohttp import web
-# from helpers.dialog_helper import DialogHelper
 from navconfig.logging import logging
+from navigator.applications.base import BaseApplication  # pylint: disable=E0611
+from navigator.types import WebApp   # pylint: disable=E0611
 from botbuilder.core.teams import TeamsInfo
 from botbuilder.core import (
     ActivityHandler,
@@ -10,7 +12,8 @@ from botbuilder.core import (
     CardFactory,
     MessageFactory,
     ConversationState,
-    UserState
+    MemoryStorage,
+    UserState,
 )
 from botbuilder.schema import (
     Activity,
@@ -21,14 +24,10 @@ from botbuilder.schema import (
 from botbuilder.schema.teams import TeamsChannelAccount
 from botbuilder.dialogs import Dialog
 from .helpers import DialogHelper
-from .models import UserProfile, ConversationData
+from ..models import UserProfile, ConversationData
 from .interfaces.messages import MessageHandler
-
-class BotException(Exception):
-    """
-    Base exception class for bot-related errors.
-    """
-    pass
+from ..config import BotConfig
+from ..adapters import AdapterHandler
 
 
 class AbstractBot(ActivityHandler, MessageHandler):
@@ -46,32 +45,79 @@ class AbstractBot(ActivityHandler, MessageHandler):
 
     def __init__(
         self,
+        bot_name: str,
         app: web.Application,
-        conversation_state: ConversationState = None,
-        user_state: UserState = None,
-        dialog: Dialog = None,
+        config: Optional[Union[BotConfig, dict]] = None,
+        client_id: str = None,
+        client_secret: str = None,
+        welcome_message: Optional[str] = None,
+        dialog: Any = None,
+        route: str = "/api/messages",
         **kwargs
     ):
+        self._bot_name = bot_name
+        # class name
         self.__name__ = self.__class__.__name__
-        self.app = app  # type: ignore
-        self.kwargs = kwargs
+        self.app: web.Application = app
+        self._adapter = None
+        self.dialog = dialog
+        self.dialog_set = None
+        # Memory and User State Management
+        self._memory = None
         self._conversation_state = None
         self._user_state = None
-        self.dialog_set = None
-        self.welcome_message: str = 'Welcome to this Bot.'
-        # Conversation State:
-        if conversation_state:
-            self.conversation_state = conversation_state
-        # Create a UserProfile on self.user_state
-        if user_state:
-            self.user_state = user_state
-        # Dialog:
-        self.dialog = dialog
-        #
+        self.welcome_message: str = welcome_message or self.default_message
         self.logger = logging.getLogger(
             name=f'AzureBot.{self.__name__}'
         )
+        if not config:
+            config = BotConfig(
+                client_id=client_id,
+                client_secret=client_secret
+            )
+        elif isinstance(config, dict):
+            config = BotConfig(**config)
+        elif not isinstance(config, BotConfig):
+            raise ValueError("Invalid configuration provided.")
+
+        self._config = config
+        self.app_id = self._config.APP_ID or client_id
+        self.app_password = self._config.APP_PASSWORD or client_secret
+
+        if not self.app_id or not self.app_password:
+            self.logger.error("AzureBot: Missing Microsoft App ID and App Password.")
+            raise ValueError(
+                "AzureBot: Missing Microsoft App ID and App Password."
+            )
+        self.kwargs = kwargs
+        self._route = route
         super().__init__()
+
+    def setup(self, app: web.Application):
+        if isinstance(app, BaseApplication):
+            self.app = app.get_app()
+        elif isinstance(app, WebApp):
+            self.app = app  # register the app into the Extension
+        # Memory and User State Management
+        self._memory = MemoryStorage()
+        self._user_state = UserState(self._memory)
+        self._conversation_state = ConversationState(self._memory)
+        # Config adapter
+        self._adapter = AdapterHandler(
+            config=self._config,
+            logger=self.logger,
+            conversation_state=self._conversation_state
+        )
+        # adding routes:
+        self.app.router.add_post(self._route, self.messages)
+        # add bot routes to exception routes
+        try:
+            _auth = self.app['auth']
+            _auth.add_exclude_list(self._route)
+        except Exception as e:
+            self.logger.error(
+                f"Auth Error: {e}"
+            )
 
     @property
     def user_state(self):
@@ -186,18 +232,29 @@ class AbstractBot(ActivityHandler, MessageHandler):
         return attachment_list
 
     async def on_message_activity(self, turn_context: TurnContext):
+        """Handles incoming message activities."""
         print('=== ON MESSAGE ACTIVITY === ')
         # Listen for the command to send a badge
         if turn_context.activity.text:
             if turn_context.activity.text.lower().strip() in self.commands:
                 if callable(self.commands_callback):
-                    await self.commands_callback(turn_context)
+                    try:
+                        await self.commands_callback(turn_context)
+                    except Exception as exc:
+                        self.logger.error(
+                            f"Callback Error: {self.commands_callback.__name__}: {exc}"
+                        )
         elif turn_context.activity.value:
             if callable(self.activity_callback):
-                await self.activity_callback(  # pylint: disable=not-callable,E1102
-                    turn_context.activity.value,
-                    turn_context
-                )
+                try:
+                    await self.activity_callback(  # pylint: disable=not-callable,E1102
+                        turn_context.activity.value,
+                        turn_context
+                    )
+                except Exception as exc:
+                    self.logger.error(
+                        f"Callback Error: {self.activity_callback.__name__}: {exc}"
+                    )
         else:
             user_response = turn_context.activity.text
             message = self.get_message(
@@ -247,6 +304,14 @@ class AbstractBot(ActivityHandler, MessageHandler):
                         f"Failed to send activity: {str(e)}"
                     )
 
+    async def save_state_changes(self, turn_context: TurnContext):
+        await self._conversation_state.save_changes(
+            turn_context
+        )
+        await self._user_state.save_changes(
+            turn_context
+        )
+
     async def on_turn(self, turn_context: TurnContext):
         ## Get the user's profile on MS Teams:
         print('=== ON TURN === ')
@@ -274,32 +339,17 @@ class AbstractBot(ActivityHandler, MessageHandler):
                 if turn_context.activity.text.lower().strip() in self.commands:
                     await self.commands_callback(turn_context, user_profile)
             # Save any state changes that might have occurred during the turn.
-            await self._conversation_state.save_changes(
-                turn_context
-            )
-            await self._user_state.save_changes(
-                turn_context
-            )
+            await self.save_state_changes(turn_context)
         elif turn_context.activity.channel_id == 'webchat':
             # Howto: Evaluate WebChat
             await super().on_turn(turn_context)
             # Save any state changes that might have occurred during the turn.
-            await self._conversation_state.save_changes(
-                turn_context
-            )
-            await self._user_state.save_changes(
-                turn_context
-            )
+            await self.save_state_changes(turn_context)
         else:
             # TODO: Evaluate different channels
             await super().on_turn(turn_context)
             # Save any state changes that might have occurred during the turn.
-            await self._conversation_state.save_changes(
-                turn_context
-            )
-            await self._user_state.save_changes(
-                turn_context
-            )
+            await self.save_state_changes(turn_context)
 
     async def send_adaptive_card(self, turn_context: TurnContext, **kwargs):
         message = Activity(
@@ -309,3 +359,44 @@ class AbstractBot(ActivityHandler, MessageHandler):
         await turn_context.send_activity(message)
 
     commands_callback = send_adaptive_card
+
+    # Bot message handler:
+    # Listen for incoming requests on /api/messages
+    async def messages(self, request: web.Request) -> web.Response:
+        """
+        Processes incoming HTTP requests containing bot activities
+         and generates appropriate responses.
+
+        Args:
+            request: The incoming HTTP request to process.
+
+        Returns:
+            An aiohttp web Response object, typically with
+             a status code of HTTPStatus.OK.
+        """
+        # Main bot message handler.
+        if request.content_type.lower() == 'application/json':
+            body = await request.json()
+        else:
+            return web.Response(status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+
+        activity = Activity().deserialize(body)
+        auth_header = request.headers.get('Authorization', '')
+        # TODO: routing to various Bots
+        try:
+            response = await self._adapter.process_activity(
+                auth_header, activity, self.on_turn
+            )
+            if response:
+                return web.json_response(
+                    data=response.body,
+                    status=response.status
+                )
+            return web.Response(status=HTTPStatus.OK)
+        except Exception as exc:
+            self.logger.error(
+                f"Error processing activity: {exc}", exc_info=True
+            )
+            return web.Response(
+                status=HTTPStatus.INTERNAL_SERVER_ERROR
+            )

@@ -8,9 +8,9 @@ from botbuilder.schema import Activity, ActivityTypes
 from botbuilder.core import (
     TurnContext,
 )
-from .models import ChatResponse
+from ..models import ChatResponse
 from .abstract import AbstractBot
-from .models import UserProfile, ConversationData
+from ..models import UserProfile, ConversationData
 
 
 class ChatBot(AbstractBot):
