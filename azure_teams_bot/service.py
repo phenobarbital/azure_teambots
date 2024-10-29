@@ -2,6 +2,7 @@ import importlib
 from typing import Union
 from aiohttp import web
 from botbuilder.core.integration import aiohttp_error_middleware
+from navconfig import config
 from navconfig.logging import logging
 from navigator.applications.base import BaseApplication  # pylint: disable=E0611
 from navigator.types import WebApp   # pylint: disable=E0611
@@ -69,7 +70,7 @@ class AzureBots:
         self.bots: list = []
         self.logger = logging.getLogger('Navigator.Bots')
         self.logger.notice(
-            "AzureBot: Starting Azure Bot Service..."
+            f"AzureBot: Starting Azure Bot Service with {len(bots)} Bots."
         )
         # Other arguments:
         self._kwargs = kwargs
@@ -118,8 +119,15 @@ class AzureBots:
             self.logger.error(
                 f"Failed to load bot: {exc}"
             )
+            bot = bot_name.upper()
+            client_id = config.get(f'{bot}_CLIENT_ID')
+            client_secret = config.get(f'{bot}_CLIENT_SECRET')
             return BaseBot(
+                bot_name=bot_name,
                 app=self.app,
+                client_id=client_id,
+                client_secret=client_secret,
+                route=f'/api/v1/{bot_name.lower()}/messages'
             )
 
     def setup(

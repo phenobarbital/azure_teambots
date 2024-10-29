@@ -17,6 +17,7 @@ except ImportError as exc:
     print(exc)
     AZUREBOT_INSTALLED = False
 
+
 class Main(AppHandler):
     """
     Main App Handler for Parrot Application.
