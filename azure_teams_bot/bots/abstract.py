@@ -64,8 +64,6 @@ class AbstractBot(ActivityHandler, MessageHandler):
         self.dialog_set = None
         # Memory and User State Management
         self._memory = None
-        self._conversation_state = None
-        self._user_state = None
         self.welcome_message: str = welcome_message or self.default_message
         self.logger = logging.getLogger(
             name=f'AzureBot.{self.__name__}'
@@ -100,13 +98,14 @@ class AbstractBot(ActivityHandler, MessageHandler):
             self.app = app  # register the app into the Extension
         # Memory and User State Management
         self._memory = MemoryStorage()
-        self._user_state = UserState(self._memory)
-        self._conversation_state = ConversationState(self._memory)
+        # Use property setters to initialize accessors
+        self.user_state = UserState(self._memory)
+        self.conversation_state = ConversationState(self._memory)
         # Config adapter
         self._adapter = AdapterHandler(
             config=self._config,
             logger=self.logger,
-            conversation_state=self._conversation_state
+            conversation_state=self.conversation_state
         )
         # adding routes:
         self.app.router.add_post(self._route, self.messages)
@@ -126,9 +125,7 @@ class AbstractBot(ActivityHandler, MessageHandler):
     @user_state.setter
     def user_state(self, value):
         self._user_state = value
-        self.user_profile_accessor = self._user_state.create_property(
-            "UserProfile"
-        )
+        self.user_profile_accessor = self._user_state.create_property("UserProfile")
 
     @property
     def conversation_state(self):
@@ -137,15 +134,11 @@ class AbstractBot(ActivityHandler, MessageHandler):
     @conversation_state.setter
     def conversation_state(self, value):
         self._conversation_state = value
-        self.conversation_data_accessor = self._conversation_state.create_property(
-            "ConversationData"
-        )
+        self.conversation_data_accessor = self._conversation_state.create_property("ConversationData")
         self.set_dialog_state()
 
     def set_dialog_state(self):
-        self.dialog_state = self._conversation_state.create_property(
-            "DialogState"
-        )
+        self.dialog_state = self._conversation_state.create_property("DialogState")
 
     def get_message(
         self,
@@ -305,10 +298,10 @@ class AbstractBot(ActivityHandler, MessageHandler):
                     )
 
     async def save_state_changes(self, turn_context: TurnContext):
-        await self._conversation_state.save_changes(
+        await self.conversation_state.save_changes(
             turn_context
         )
-        await self._user_state.save_changes(
+        await self.user_state.save_changes(
             turn_context
         )
 

@@ -1,4 +1,3 @@
-from sys import exit
 from botbuilder.core import TurnContext
 from .abstract import AbstractBot
 

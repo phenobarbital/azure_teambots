@@ -1,0 +1,53 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.1",
+  "id": "dd40c9ed-887c-48a3-bab7-f4c742e9ff6f",
+  "packageName": "com.microsoft.teams.navigator_bot",
+  "developer": {
+    "name": "T-ROC Global ",
+    "websiteUrl": "https://navigator.trocdigital.io",
+    "privacyUrl": "https://trocglobal.com/privacy-policy/",
+    "termsOfUseUrl": "https://trocglobal.com/terms-conditions/"
+  },
+  "icons": {
+    "color": "trocdigital.png",
+    "outline": "trocoutline2.png"
+  },
+  "name": {
+    "short": "NavigatorBot",
+    "full": "Navigator Bot Agent"
+  },
+  "description": {
+    "short": "Navigator Staff Training Bot",
+    "full": "Navigator Staff Training Bot"
+  },
+  "accentColor": "#13CFA9",
+  "bots": [
+    {
+      "botId": "dd40c9ed-887c-48a3-bab7-f4c742e9ff6f",
+      "scopes": [
+        "personal",
+        "team"
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false,
+      "commandLists": []
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "troccommunicator.azurefd.net",
+    "navigator.trocglobal.com",
+    "navigator.trocdigital.io",
+    "api.dev.trocdigital.io",
+    "navigator-new.dev.trocdigital.io",
+    "ai.trocdigital.net",
+    "api.trocdigital.io",
+    "api.trocdigital.net",
+    "data.trocdigital.io"
+  ]
+}
