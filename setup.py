@@ -99,6 +99,8 @@ setup(
         "botbuilder-integration-aiohttp==4.16.2",
         "botbuilder-schema==4.16.2",
         "botbuilder-dialogs==4.16.2",
+        "msgraph-core==1.1.6",
+        "azure-identity==1.19.0",
         "helpers==0.2.0",
         "python-datamodel>=0.6.28",
         "navconfig>=1.7.0",

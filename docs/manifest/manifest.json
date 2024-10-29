@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
   "manifestVersion": "1.16",
-  "version": "1.1",
+  "version": "1.8",
   "id": "dd40c9ed-887c-48a3-bab7-f4c742e9ff6f",
   "packageName": "com.microsoft.teams.navigator_bot",
   "developer": {
@@ -27,27 +27,31 @@
     {
       "botId": "dd40c9ed-887c-48a3-bab7-f4c742e9ff6f",
       "scopes": [
-        "personal",
-        "team"
+        "team",
+        "personal"
       ],
       "supportsFiles": false,
-      "isNotificationOnly": false,
-      "commandLists": []
+      "isNotificationOnly": false
     }
   ],
+  "webApplicationInfo": {
+    "id": "dd40c9ed-887c-48a3-bab7-f4c742e9ff6f",
+    "resource": "api://dd40c9ed-887c-48a3-bab7-f4c742e9ff6f"
+  },
   "permissions": [
     "identity",
     "messageTeamMembers"
   ],
   "validDomains": [
     "troccommunicator.azurefd.net",
-    "navigator.trocglobal.com",
+    "navigator.trocdigital.com",
     "navigator.trocdigital.io",
     "api.dev.trocdigital.io",
     "navigator-new.dev.trocdigital.io",
     "ai.trocdigital.net",
     "api.trocdigital.io",
     "api.trocdigital.net",
-    "data.trocdigital.io"
+    "data.trocdigital.io",
+    "eminent-kiwi-trusty.ngrok-free.app"
   ]
 }

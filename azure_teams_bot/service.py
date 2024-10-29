@@ -11,6 +11,8 @@ from .bots.abstract import AbstractBot
 from .bots.base import BaseBot
 
 
+logging.getLogger(name='msrest').setLevel(logging.INFO)
+
 class AzureBots:
     """
     A bot handler class for integrating Bots with the Azure Bot Service using
