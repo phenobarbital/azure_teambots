@@ -26,6 +26,9 @@ class TeamsChannelBot(AbstractBot):
             team_id = turn_context.activity.channel_data["team"]["id"]
             channel_id = turn_context.activity.channel_data["channel"]["id"]
 
+            print("Team ID: ", team_id)
+            print("Channel ID: ", channel_id)
+
             # # Authenticate with Microsoft Graph
             # credential = ClientSecretCredential(
             #     tenant_id=MS_TENANT_ID,
