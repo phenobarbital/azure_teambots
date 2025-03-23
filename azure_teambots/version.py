@@ -1,6 +1,6 @@
 """Azure Teams Bot Meta information."""
 
-__title__ = 'azure_teams_bot'
+__title__ = 'azure_teambots'
 __description__ = (
     'Azure Teams Bot is a Facility for deploying MS Teams Bots. '
     'Using Azure Bot Framework.'

@@ -29,7 +29,7 @@ lint:
 test:
 	python -m coverage run -m azure_teams_bot.tests
 	python -m coverage report
-	python -m mypy azure_teams_bots/*.py
+	python -m mypy azure_teambots/*.py
 
 distclean:
 	rm -rf .venv

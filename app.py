@@ -4,14 +4,14 @@ from navigator.handlers.types import AppHandler
 # Tasker:
 from navigator.background import BackgroundQueue
 from navigator_auth import AuthHandler
-from azure_teams_bot.conf import (
+from azure_teambots.conf import (
     MS_TENANT_ID,
     BOTDEV_CLIENT_ID,
     BOTDEV_CLIENT_SECRET,
 )
 try:
-    from azure_teams_bot import AzureBots
-    from azure_teams_bot.bots.listener import TeamsChannelBot
+    from azure_teambots import AzureBots
+    from azure_teambots.bots.listener import TeamsChannelBot
     AZUREBOT_INSTALLED = True
 except ImportError as exc:
     print(exc)
