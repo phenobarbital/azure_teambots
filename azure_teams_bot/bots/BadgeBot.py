@@ -11,6 +11,7 @@ from botbuilder.schema import (
 from .abstract import AbstractBot
 from .dialogs.badge import BadgeDialog
 
+
 class BadgeBot(AbstractBot):
     """
     bot that handles incoming messages from users related to badges.

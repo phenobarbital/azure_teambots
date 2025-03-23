@@ -25,27 +25,27 @@ class AzureBots:
 
     Attributes:
         _adapter (AdapterHandler): The adapter handler for processing
-          incoming bot activities.
+        incoming bot activities.
         logger (Logger): Logger instance for logging messages and errors.
         app_id (str): The Microsoft App ID for the bot, used
-           for authentication with the Bot Framework.
+        for authentication with the Bot Framework.
         app_password (str): The Microsoft App Password for the bot,
-          used for authentication.
+        used for authentication.
         _config (BotConfig): Configuration object containing bot settings.
         _memory (MemoryStorage): In-memory storage for bot state management.
         _user_state (UserState): State management for user-specific data.
         _conversation_state (ConversationState): State management
-          for conversation-specific data.
+        for conversation-specific data.
         bot (Bot): Instance of the bot logic handling user interactions.
 
     Methods:
         setup(app, route: str = "/api/messages") -> web.Application:
             Configures the aiohttp web application to handle bot messages
-              and sets up state management.
+            and sets up state management.
 
         messages(request: web.Request) -> web.Response:
             The main handler for processing incoming HTTP requests
-              containing bot activities.
+            containing bot activities.
 
     Example:
         # Initialize and setup the AzureBot with an aiohttp application
@@ -138,7 +138,7 @@ class AzureBots:
     ) -> web.Application:
         """
         Configures the aiohttp web application to handle
-          bot messages at a specified route.
+        bot messages at a specified route.
 
         Args:
             app: The aiohttp web application instance to configure.

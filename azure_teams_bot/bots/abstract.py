@@ -358,14 +358,14 @@ class AbstractBot(ActivityHandler, MessageHandler):
     async def messages(self, request: web.Request) -> web.Response:
         """
         Processes incoming HTTP requests containing bot activities
-         and generates appropriate responses.
+        and generates appropriate responses.
 
         Args:
             request: The incoming HTTP request to process.
 
         Returns:
             An aiohttp web Response object, typically with
-             a status code of HTTPStatus.OK.
+            a status code of HTTPStatus.OK.
         """
         # Main bot message handler.
         if request.content_type.lower() == 'application/json':
