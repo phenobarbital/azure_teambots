@@ -80,7 +80,7 @@ class AzureBots:
             **kwargs: Arbitrary keyword arguments containing
             the MicrosoftAppId and MicrosoftAppPassword.
         """
-        self.bots: list = []
+        self.bots: dict = {}
         self.logger = logging.getLogger('AzureBot.Manager')
         self.logger.notice(
             f"AzureBot: Starting Azure Bot Service with {len(bots)} Bots."
@@ -101,7 +101,7 @@ class AzureBots:
         Returns:
             An instance of the specified bot type.
         """
-        pass
+        return None
 
     def add_bot(self) -> AbstractBot:
         """
@@ -112,7 +112,7 @@ class AzureBots:
         """
         pass
 
-    def _load_bot(self, bot_name: str) -> AbstractBot:
+    def load_bot(self, bot_name: str) -> AbstractBot:
         """
         Loads the bot logic based on the specified bot type.
 
@@ -121,20 +121,32 @@ class AzureBots:
         """
         try:
             clspath = f"services.bot.bots.{bot_name}"
+            bot = bot_name.upper()
+            client_id = config.get(f'{bot}_CLIENT_ID')
+            client_secret = config.get(f'{bot}_CLIENT_SECRET')
+            if client_id is None or client_secret is None:
+                raise ValueError(
+                    f"Missing Client ID or Secret for bot: {bot}"
+                )
             bot_module = importlib.import_module(
                 clspath
             )
             bot_class = getattr(bot_module, bot_name)
             return bot_class(
+                bot_name=bot_name,
+                id=bot_name.lower(),
+                client_id=client_id,
+                client_secret=client_secret,
+                route=f'/api/v1/{bot_name.lower()}/messages',
                 app=self.app,
             )
+        except ValueError:
+            raise
         except (ImportError, AttributeError) as exc:
             self.logger.error(
-                f"Failed to load bot: {exc}"
+                f"Failed to load bot: {exc}, Defaulting to BaseBot."
             )
-            bot = bot_name.upper()
-            client_id = config.get(f'{bot}_CLIENT_ID')
-            client_secret = config.get(f'{bot}_CLIENT_SECRET')
+            # Create a new instance of BaseBot with the provided credentials
             return BaseBot(
                 bot_name=bot_name,
                 app=self.app,
@@ -165,17 +177,28 @@ class AzureBots:
         self.app.middlewares.append(aiohttp_error_middleware)
         # Bot Configuration of instances:
         for bot in self._bots:
-            if isinstance(bot, str):
-                bt = self._load_bot(bot)
-            elif isinstance(bot, AbstractBot):
+            if isinstance(bot, AbstractBot):
                 bt = bot
+            elif isinstance(bot, str):
+                # Create a new Bot instance based on class name:
+                bt = self.load_bot(bot)
+            elif isinstance(bot, dict):
+                bt = self.create_bot(bot)
             else:
                 self.logger.warning(
                     "AzureBot: Invalid Bot Type."
                 )
                 continue
-            bt.setup(self.app)
-            self.bots.append(bt)
+            try:
+                bt.setup(self.app)
+                self.bots[bt.id] = bt
+            except Exception as err:
+                self.logger.error(
+                    f"AzureBot: Failed to setup bot {bt.id}: {err}"
+                )
+                raise RuntimeError(
+                    f"AzureBot: Failed to setup bot {bt.id}: {err}"
+                ) from err
         # startup operations over extension backend
         self.app.on_startup.append(self.on_startup)
         # cleanup operations over Auth backend
@@ -183,32 +206,61 @@ class AzureBots:
         ## Configure Routes
         router = self.app.router
         # More Generic Approach
-        # router.add_route("GET", r"/api/v1/azurebots/{bot}", self.login, name='nav_login')
-        # router.add_route("POST", r"/api/v1/azurebots/{bot}", self.api_login, name="api_login_post")
+        router.add_route(
+            "GET", r"/api/v1/azurebots/{bot}", self._botmessage, name='azurebot_message'
+        )
+        router.add_route(
+            "POST", r"/api/v1/azurebots/{bot}", self._botmessage, name="azurebot_message_post"
+        )
 
     async def on_startup(self, app):
         """
         Some Authentication backends need to call an Startup.
         """
-        for bot in self.bots:
+        for name, bot in self.bots.items():
             try:
                 await bot.on_startup(app)
             except Exception as err:
                 self.logger.exception(
-                    f"Error on Startup Bot Backend {bot!s} init: {err}"
+                    f"Error on Startup Bot Backend {name!s} init: {err}"
                 )
                 raise RuntimeError(
-                    f"Error on Startup Auth Backend {bot!s} init: {err}"
+                    f"Error on Startup Auth Backend {name!s} init: {err}"
                 ) from err
 
     async def on_cleanup(self, app):
         """
         Cleanup the processes
         """
-        for bot in self.bots:
+        for name, bot in self.bots.items():
             try:
                 await bot.on_cleanup(app)
             except Exception as err:
-                logging.exception(
-                    f"Error on Cleanup Auth Backend {bot!s} init: {err}"
+                self.logger.exception(
+                    f"Error on Cleanup Auth Backend {name} init: {err}"
                 )
+
+    async def _botmessage(self, request: web.Request):
+        """
+        Handles incoming bot messages and routes them to the appropriate bot logic.
+
+        Args:
+            request: The incoming HTTP request containing the bot activity.
+
+        Returns:
+            A web.Response indicating the result of the processing.
+        """
+        # Extract bot name from the URL path
+        bot_name = request.match_info.get('bot')
+        if bot_name is None:
+            return web.Response(
+                status=400, text="Bot name not provided."
+            )
+        # Check if the bot exists in the registered bots
+        if bot_name not in self.bots:
+            return web.Response(
+                status=404, text=f"Bot with name {bot_name} not found."
+            )
+        # Get the bot instance and process the request
+        bot = self.bots[bot_name]
+        return await bot.messages(request)

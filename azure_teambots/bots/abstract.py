@@ -97,6 +97,10 @@ class AbstractBot(ActivityHandler, MessageHandler):
             f"AzureBot: Initializing {self.__name__} with ID {self._botid}."
         )
 
+    @property
+    def id(self):
+        return self._botid
+
     def setup(self, app: web.Application):
         if isinstance(app, BaseApplication):
             self.app = app.get_app()
