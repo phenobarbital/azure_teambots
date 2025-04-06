@@ -118,6 +118,18 @@ class AbstractBot(ActivityHandler, MessageHandler):
                 f"Auth Error: {e}"
             )
 
+    async def on_startup(self, app):
+        """
+        Some Authentication backends need to call an Startup.
+        """
+        pass
+
+    async def on_cleanup(self, app):
+        """
+        Cleanup the processes
+        """
+        pass
+
     @property
     def user_state(self):
         return self._user_state

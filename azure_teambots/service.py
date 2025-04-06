@@ -81,7 +81,7 @@ class AzureBots:
             the MicrosoftAppId and MicrosoftAppPassword.
         """
         self.bots: list = []
-        self.logger = logging.getLogger('Navigator.Bots')
+        self.logger = logging.getLogger('AzureBot.Manager')
         self.logger.notice(
             f"AzureBot: Starting Azure Bot Service with {len(bots)} Bots."
         )
@@ -176,3 +176,39 @@ class AzureBots:
                 continue
             bt.setup(self.app)
             self.bots.append(bt)
+        # startup operations over extension backend
+        self.app.on_startup.append(self.on_startup)
+        # cleanup operations over Auth backend
+        self.app.on_cleanup.append(self.on_cleanup)
+        ## Configure Routes
+        router = self.app.router
+        # More Generic Approach
+        # router.add_route("GET", r"/api/v1/azurebots/{bot}", self.login, name='nav_login')
+        # router.add_route("POST", r"/api/v1/azurebots/{bot}", self.api_login, name="api_login_post")
+
+    async def on_startup(self, app):
+        """
+        Some Authentication backends need to call an Startup.
+        """
+        for bot in self.bots:
+            try:
+                await bot.on_startup(app)
+            except Exception as err:
+                self.logger.exception(
+                    f"Error on Startup Bot Backend {bot!s} init: {err}"
+                )
+                raise RuntimeError(
+                    f"Error on Startup Auth Backend {bot!s} init: {err}"
+                ) from err
+
+    async def on_cleanup(self, app):
+        """
+        Cleanup the processes
+        """
+        for bot in self.bots:
+            try:
+                await bot.on_cleanup(app)
+            except Exception as err:
+                logging.exception(
+                    f"Error on Cleanup Auth Backend {bot!s} init: {err}"
+                )
