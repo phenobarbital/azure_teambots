@@ -11,7 +11,7 @@ from azure_teambots.conf import (
 )
 try:
     from azure_teambots import AzureBots
-    from azure_teambots.bots import EchoBot
+    from azure_teambots.bots import EchoChannelBot
     from azure_teambots.bots.listener import TeamsChannelBot
     AZUREBOT_INSTALLED = True
 except ImportError as exc:
@@ -40,13 +40,14 @@ class Main(AppHandler):
             queue_size=5
         )
         # Azure Bot:
-        bot = EchoBot(
+        bot = EchoChannelBot(
             app=self.app,
             bot_name='Bot Dev',
             id='botdev',
-            welcome_message='Welcome to DEV Bot, you can ask me anything about T-ROC.',
+            welcome_message="Hello! I'm EchoChannelBot. Mention me with 'echo' and I'll repeat your message!",
             client_id=BOTDEV_CLIENT_ID,
-            client_secret=BOTDEV_CLIENT_SECRET
+            client_secret=BOTDEV_CLIENT_SECRET,
+            mention_text="echo"  # This is the trigger word
         )
         AzureBots(
             app=self.app,
