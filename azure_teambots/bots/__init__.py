@@ -5,9 +5,9 @@ from .base import BaseBot
 from .channel import ChannelBot
 
 __all__ = (
+    "BaseBot",
     "EchoBot",
     "BadgeBot",
     "ChatBot",
-    "BaseBot",
     "ChannelBot",
 )

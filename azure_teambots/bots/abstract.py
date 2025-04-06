@@ -1,5 +1,6 @@
 from typing import Optional, Union, Any
 from collections.abc import Callable, Awaitable
+import uuid
 from http import HTTPStatus
 from aiohttp import web
 from navconfig.logging import logging
@@ -52,10 +53,11 @@ class AbstractBot(ActivityHandler, MessageHandler):
         client_secret: str = None,
         welcome_message: Optional[str] = None,
         dialog: Any = None,
-        route: str = "/api/messages",
+        route: str = None,
         **kwargs
     ):
         self._bot_name = bot_name
+        self._botid: str = kwargs.pop('id', uuid.uuid4().hex)
         # class name
         self.__name__ = self.__class__.__name__
         self.app: web.Application = app
@@ -76,8 +78,9 @@ class AbstractBot(ActivityHandler, MessageHandler):
         elif isinstance(config, dict):
             config = BotConfig(**config)
         elif not isinstance(config, BotConfig):
-            raise ValueError("Invalid configuration provided.")
-
+            raise ValueError(
+                "Invalid configuration provided."
+            )
         self._config = config
         self.app_id = self._config.APP_ID or client_id
         self.app_password = self._config.APP_PASSWORD or client_secret
@@ -88,8 +91,11 @@ class AbstractBot(ActivityHandler, MessageHandler):
                 "AzureBot: Missing Microsoft App ID and App Password."
             )
         self.kwargs = kwargs
-        self._route = route
+        self._route = route or f"/api/{self._botid}/messages"
         super().__init__()
+        self.logger.info(
+            f"AzureBot: Initializing {self.__name__} with ID {self._botid}."
+        )
 
     def setup(self, app: web.Application):
         if isinstance(app, BaseApplication):
@@ -115,7 +121,7 @@ class AbstractBot(ActivityHandler, MessageHandler):
             _auth.add_exclude_list(self._route)
         except Exception as e:
             self.logger.error(
-                f"Auth Error: {e}"
+                f"Auth Exclusion Error: {e}"
             )
 
     async def on_startup(self, app):
@@ -159,13 +165,12 @@ class AbstractBot(ActivityHandler, MessageHandler):
         attachments: list = None,
         **kwargs
     ) -> Activity:
-        msg = Activity(
+        return Activity(
             type=activity_type or ActivityTypes.message,
             text=message,
             attachments=attachments,
             **kwargs
         )
-        return msg
 
     async def on_typing_activity(self, turn_context: TurnContext):
         try:
@@ -191,11 +196,10 @@ class AbstractBot(ActivityHandler, MessageHandler):
         print('CAE AQUI PROFILE > ', turn_context.activity.channel_id)
         if turn_context.activity.channel_id == 'msteams':
             try:
-                user_profile = await TeamsInfo.get_member(
+                return await TeamsInfo.get_member(
                     turn_context,
                     turn_context.activity.from_property.id
                 )
-                return user_profile
             except Exception as exc:
                 self.logger.warning(
                     f"Error on Teams user's profile: {exc}"
@@ -226,7 +230,12 @@ class AbstractBot(ActivityHandler, MessageHandler):
                 self.logger.info(
                     f"Received attachment: {name} ({content_type}) at {content_url}"
                 )
-                if content_url:
+                # Check if the attachment is a file
+                if content_url and content_type:
+                    # Check if the content type is a file type
+                    self.logger.info(
+                        f"Attachment URL: {content_url}"
+                    )
                     attachment_list.append(
                         {
                             "name": name,
@@ -293,7 +302,7 @@ class AbstractBot(ActivityHandler, MessageHandler):
                         )
                     else:
                         await turn_context.send_activity(
-                            f"Hi there { member.name }. " + self.welcome_message
+                            f"Hi there {member.name}. {self.welcome_message}"
                         )
                         await turn_context.send_activity(self.info_message)
                 except Exception as e:
@@ -340,9 +349,8 @@ class AbstractBot(ActivityHandler, MessageHandler):
             await self.conversation_data_accessor.set(turn_context, conversation_data)
             # after, fire up the on_message_activity:
             await super().on_turn(turn_context)
-            if turn_context.activity.text:
-                if turn_context.activity.text.lower().strip() in self.commands:
-                    await self.commands_callback(turn_context, user_profile)
+            if turn_context.activity.text and turn_context.activity.text.lower().strip() in self.commands:
+                await self.commands_callback(turn_context, user_profile)
             # Save any state changes that might have occurred during the turn.
             await self.save_state_changes(turn_context)
         elif turn_context.activity.channel_id == 'webchat':
@@ -366,7 +374,7 @@ class AbstractBot(ActivityHandler, MessageHandler):
     commands_callback = send_adaptive_card
 
     # Bot message handler:
-    # Listen for incoming requests on /api/messages
+    # Listen for incoming requests on /api/{?}/messages
     async def messages(self, request: web.Request) -> web.Response:
         """
         Processes incoming HTTP requests containing bot activities

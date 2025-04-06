@@ -11,6 +11,7 @@ from azure_teambots.conf import (
 )
 try:
     from azure_teambots import AzureBots
+    from azure_teambots.bots import EchoBot
     from azure_teambots.bots.listener import TeamsChannelBot
     AZUREBOT_INSTALLED = True
 except ImportError as exc:
@@ -39,15 +40,13 @@ class Main(AppHandler):
             queue_size=5
         )
         # Azure Bot:
-        # if AZUREBOT_INSTALLED:
-        # Odoo Test Bot:
-        bot = TeamsChannelBot(
+        bot = EchoBot(
             app=self.app,
-            bot_name='Edu',
-            welcome_message='Welcome to Edu Bot, you can ask me anything about T-ROC.',
+            bot_name='Bot Dev',
+            id='botdev',
+            welcome_message='Welcome to DEV Bot, you can ask me anything about T-ROC.',
             client_id=BOTDEV_CLIENT_ID,
-            client_secret=BOTDEV_CLIENT_SECRET,
-            route='/api/edu/messages'
+            client_secret=BOTDEV_CLIENT_SECRET
         )
         AzureBots(
             app=self.app,
