@@ -1,6 +1,6 @@
 aiounittest==1.4.2
 black==24.3.0
-build==1.0.3
+build==1.2.2.post1
 coverage[toml]==7.5.0
 flit==3.9.0
 hypothesis==6.91.0
@@ -11,10 +11,10 @@ pipdeptree==2.26.0
 pylint==2.16.1
 pyperf==2.6.2
 pytest>=6.0.0
-pytest-asyncio==0.23.2
+pytest-asyncio==0.24.0
 pytest-cov==4.0.0
 pytest-cython==0.2.0
-pytest-xdist==3.5.0
+pytest-xdist==3.6.1
 pytest-assume==2.4.3
 sdist==0.0.0
 sphinx==6.1.3
