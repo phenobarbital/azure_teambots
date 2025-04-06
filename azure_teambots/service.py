@@ -91,7 +91,7 @@ class AzureBots:
         # Calling Setup:
         self.setup(app)
 
-    def create_bot(self, config: Union[BotConfig, dict]):
+    def create_bot(self, cfg: Union[BotConfig, dict]):
         """
         Creates a New Bot instance and adds it to the AzureBot service.
 
@@ -101,7 +101,55 @@ class AzureBots:
         Returns:
             An instance of the specified bot type.
         """
-        return None
+        if isinstance(cfg, dict):
+            bot_name = cfg.pop('bot_name')
+            botcls = cfg.pop('cls', 'BaseBot')
+        else:
+            self.logger.error(
+                "AzureBot: Invalid Bot Configuration."
+            )
+            raise ValueError(
+                f"Invalid bot configuration:{cfg!r}"
+            )
+        bot = cfg.pop('id', bot_name.upper())
+        client_id = cfg.pop('client_id', config.get(f'{bot}_CLIENT_ID'))
+        client_secret = cfg.pop('client_secret', config.get(f'{bot}_CLIENT_SECRET'))
+        if client_id is None or client_secret is None:
+            raise ValueError(
+                f"Missing Client ID or Secret for bot: {bot}"
+            )
+
+        # Check if the bot class is available
+        bot_class = self.BOT_TYPES.get(botcls)
+        if not bot_class:
+            clspath = "azure_teambots.bots"
+            try:
+                bot_module = importlib.import_module(
+                    clspath
+                )
+                bot_class = getattr(bot_module, botcls)
+            except (ImportError, AttributeError) as ex:
+                self.logger.error(
+                    f"AzureBot: Failed to load bot {botcls} from {clspath}. Error: {ex!s}"
+                )
+                raise ex from None
+        if not bot_class:
+            self.logger.error(
+                f"AzureBot: Bot class {botcls} not found in {self.BOT_TYPES}."
+            )
+            raise ValueError(
+                f"Invalid bot class: {botcls}."
+            )
+        # Create a new instance of the bot class
+        return bot_class(
+            bot_name=bot_name,
+            id=bot,
+            client_id=client_id,
+            client_secret=client_secret,
+            route=f'/api/{bot.lower()}/messages',
+            app=self.app,
+            **cfg
+        )
 
     def add_bot(self) -> AbstractBot:
         """
@@ -120,7 +168,7 @@ class AzureBots:
             An instance of the specified bot type.
         """
         try:
-            clspath = f"services.bot.bots.{bot_name}"
+            clspath = f"azure_teambots.bots.{bot_name}"
             bot = bot_name.upper()
             client_id = config.get(f'{bot}_CLIENT_ID')
             client_secret = config.get(f'{bot}_CLIENT_SECRET')
@@ -137,7 +185,7 @@ class AzureBots:
                 id=bot_name.lower(),
                 client_id=client_id,
                 client_secret=client_secret,
-                route=f'/api/v1/{bot_name.lower()}/messages',
+                route=f'/api/{bot_name.lower()}/messages',
                 app=self.app,
             )
         except ValueError:
