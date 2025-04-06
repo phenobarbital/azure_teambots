@@ -5,7 +5,7 @@ __description__ = (
     'Azure Teams Bot is a Facility for deploying MS Teams Bots. '
     'Using Azure Bot Framework.'
 )
-__version__ = '0.0.5'
+__version__ = '0.1.0'
 __author__ = 'Jesus Lara'
 __author_email__ = 'jesuslarag@gmail.com'
 __license__ = 'MIT'

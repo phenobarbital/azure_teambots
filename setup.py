@@ -49,10 +49,10 @@ COMPILE_ARGS = ["-O3"]
 
 setup(
     name='azure_teambots',
-    version=__version__,
+    version=__version__,  # pylint: disable=E0601
     python_requires=">=3.9.16",
     url='https://github.com/phenobarbital/azure_teambots',
-    description=__description__,
+    description=__description__,  # pylint: disable=E0601
     long_description=readme(),
     long_description_content_type='text/markdown',
     classifiers=[
@@ -86,7 +86,7 @@ setup(
     ),
     include_package_data=True,
     package_data={"azure_teambots": ["py.typed"]},
-    license=__license__,
+    license=__license__,  # pylint: disable=E0601
     license_files='LICENSE',
     setup_requires=[
         "setuptools==74.0.0",
