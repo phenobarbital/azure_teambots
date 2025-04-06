@@ -1,5 +1,5 @@
 [project]
-name = "azure_teams_bot"
+name = "azure_teambots"
 authors = [
     {name = "Jesus Lara G.", email = "jesuslarag@gmail.com"},
 ]
@@ -43,7 +43,7 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.flit.metadata]
-module = "azure_teams_bot"
+module = "azure_teambots"
 author = "Jesus Lara Gimenez"
 author-email = "jesuslarag@gmail.com"
 home-page = "https://github.com/phenobarbital/azure_teambots"

@@ -18,7 +18,7 @@ def readme():
         return rd.read()
 
 
-version = get_path('azure_teams_bot/version.py')
+version = get_path('azure_teambots/version.py')
 with open(version, 'r', encoding='utf-8') as meta:
     t = compile(meta.read(), version, 'exec', ast.PyCF_ONLY_AST)
     for node in (n for n in t.body if isinstance(n, ast.Assign)):
@@ -45,10 +45,10 @@ with open(version, 'r', encoding='utf-8') as meta:
                 if name.id == '__author_email__':
                     __author_email__ = v.s
 
-COMPILE_ARGS = ["-O2"]
+COMPILE_ARGS = ["-O3"]
 
 setup(
-    name='azure_teams_bot',
+    name='azure_teambots',
     version=__version__,
     python_requires=">=3.9.16",
     url='https://github.com/phenobarbital/azure_teambots',
@@ -85,7 +85,7 @@ setup(
         ]
     ),
     include_package_data=True,
-    package_data={"azure_teams_bot": ["py.typed"]},
+    package_data={"azure_teambots": ["py.typed"]},
     license=__license__,
     license_files='LICENSE',
     setup_requires=[
@@ -99,12 +99,12 @@ setup(
         "botbuilder-integration-aiohttp==4.16.2",
         "botbuilder-schema==4.16.2",
         "botbuilder-dialogs==4.16.2",
-        "msgraph-core==1.1.6",
-        "azure-identity==1.19.0",
+        "msal==1.32.0",
+        "msgraph-core==1.3.2",
+        "azure-identity==1.20.0",
         "helpers==0.2.0",
-        "python-datamodel>=0.6.28",
-        "navconfig>=1.7.0",
-        "navigator-api>=2.10.0",
+        "navconfig>=1.7.13",
+        "navigator-api==2.12.20",
     ],
     tests_require=[
         'pytest>=5.4.0',

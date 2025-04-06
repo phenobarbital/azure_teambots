@@ -5,9 +5,11 @@ venv:
 install:
 	pip install -e .
 	pip install --upgrade navconfig[default]
-	pip install --upgrade navigator-session
-	pip install --upgrade navigator-auth
+	pip install navigator-auth==0.15.4
 	pip install --upgrade navigator-api[locale,uvloop]
+	# Fix other dependencies:
+	pip install aiohttp==3.11.16
+	pip install jsonpickle==3.0.2
 	echo 'start using Azure Teams Bot'
 
 setup:
@@ -20,14 +22,14 @@ release: lint test clean
 	flit publish
 
 format:
-	python -m black azure_teams_bot
+	python -m black azure_teambots
 
 lint:
-	python -m pylint --rcfile .pylintrc azure_teams_bot/*.py
-	python -m black --check azure_teams_bot
+	python -m pylint --rcfile .pylintrc azure_teambots/*.py
+	python -m black --check azure_teambots
 
 test:
-	python -m coverage run -m azure_teams_bot.tests
+	python -m coverage run -m azure_teambots.tests
 	python -m coverage report
 	python -m mypy azure_teambots/*.py
 

@@ -1,14 +1,40 @@
 import time
+from typing import Any, Dict
 import uuid
+from datetime import datetime, timedelta, timezone
 from datamodel import BaseModel, Field
 
+
+def created_at(*args, **kwargs) -> int:
+    """Get the current time in milliseconds since epoch.
+    """
+    return int(datetime.now(timezone.utc).timestamp() * 1000)
+
+def default_consent():
+    return {
+        "location": False,
+        "profile": False,
+        "graph": False
+    }
 
 class UserProfile(BaseModel):
     """User Profile for User State Management.
     """
+    id: str
     name: str
     email: str
-    profile: dict = Field(required=False, default_factory=dict)
+    upn: str
+    profile: Dict[str, Any] = Field(required=False, default_factory=dict)
+    location: Dict[str, Any] = Field(required=False, default_factory=dict)
+    tenant_id: str
+    graph_data: Dict[str, Any] = Field(required=False, default_factory=dict)
+    sid: uuid.UUID = Field(primary_key=True, required=False, default=uuid.uuid4)
+    at: int = Field(default=created_at)
+    preferences: Dict[str, Any] = Field(required=False, default_factory=dict)
+    last_interaction: datetime
+    ip_address: str
+    device_info: Dict[str, Any] = Field(required=False, default_factory=dict)
+    consents: Dict[str, bool] = Field(required=False, default=default_consent)
 
 
 class ConversationData(BaseModel):
@@ -23,10 +49,6 @@ class ConversationData(BaseModel):
     locale: str
     prompted_for_user_name: bool = Field(required=False, default=False)
     entities: dict = Field(required=False, default_factory=dict)
-
-
-def created_at(*args, **kwargs) -> int:
-    return int(time.time()) * 1000
 
 
 class ChatResponse(BaseModel):

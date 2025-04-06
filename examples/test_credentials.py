@@ -1,5 +1,5 @@
 import requests
-from azure_teams_bot.conf import (
+from azure_teambots.conf import (
     MS_TENANT_ID,
     MS_CLIENT_ID,
     MS_CLIENT_SECRET

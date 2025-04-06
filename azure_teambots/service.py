@@ -9,6 +9,7 @@ from navigator.types import WebApp   # pylint: disable=E0611
 from .config import BotConfig
 from .bots.abstract import AbstractBot
 from .bots.base import BaseBot
+from .bots import EchoBot
 
 
 logging.getLogger(name='msrest').setLevel(logging.INFO)
@@ -54,8 +55,18 @@ class AzureBots:
 
     Note:
         Ensure that the MicrosoftAppId and MicrosoftAppPassword are
-          securely stored and not hardcoded in production.
+        securely stored and not hardcoded in production.
     """
+    # Define available bot types
+    BOT_TYPES = {
+        "echo": EchoBot,
+        # Add other bot types as they're implemented
+        # "channel": ChannelBot,
+        # "private": PrivateChatBot,
+        # "wizard": WizardBot,
+        # "file": FileBot,
+    }
+
     def __init__(
         self,
         app: web.Application,
@@ -67,7 +78,7 @@ class AzureBots:
 
         Args:
             **kwargs: Arbitrary keyword arguments containing
-              the MicrosoftAppId and MicrosoftAppPassword.
+            the MicrosoftAppId and MicrosoftAppPassword.
         """
         self.bots: list = []
         self.logger = logging.getLogger('Navigator.Bots')
@@ -76,7 +87,7 @@ class AzureBots:
         )
         # Other arguments:
         self._kwargs = kwargs
-        self._bots = bots
+        self._bots = bots or []
         # Calling Setup:
         self.setup(app)
 

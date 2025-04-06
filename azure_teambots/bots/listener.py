@@ -5,7 +5,7 @@ from botbuilder.schema import ActivityTypes, ChannelAccount
 from botbuilder.schema.teams import TeamsChannelAccount, TeamInfo
 from botbuilder.core.teams import TeamsInfo
 from .abstract import AbstractBot
-from azure_teams_bot.conf import (
+from azure_teambots.conf import (
     MS_TENANT_ID,
     BOTDEV_CLIENT_ID,
     BOTDEV_CLIENT_SECRET,
