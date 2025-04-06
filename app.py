@@ -42,12 +42,14 @@ class Main(AppHandler):
         # Azure Bot:
         bot = EchoChannelBot(
             app=self.app,
-            bot_name='Bot Dev',
+            bot_name='EchoChannel',
             id='botdev',
-            welcome_message="Hello! I'm EchoChannelBot. Mention me with 'echo' and I'll repeat your message!",
+            welcome_message="Hello! I'm EchoChannel. Mention me with 'echo' and I'll repeat your message!",
             client_id=BOTDEV_CLIENT_ID,
             client_secret=BOTDEV_CLIENT_SECRET,
-            mention_text="echo"  # This is the trigger word
+            mention_text="echo",  # This is the trigger word
+            debug_mode=True,      # Enable detailed logging
+            strip_quotes=True,    # Remove quotes around the echoed text
         )
         AzureBots(
             app=self.app,
