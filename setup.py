@@ -91,7 +91,7 @@ setup(
     setup_requires=[
         "setuptools==74.0.0",
         "Cython==3.0.11",
-        "wheel==0.44.0"
+        "wheel==0.45.1"
     ],
     install_requires=[
         "transitions==0.9.2",

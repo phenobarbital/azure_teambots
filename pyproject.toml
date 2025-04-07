@@ -35,7 +35,7 @@ platforms = "manylinux_2_28_x86_64"
 requires = [
     'setuptools==74.0.0',
     'Cython==3.0.11',
-    'wheel==0.44.0',
+    'wheel==0.45.1',
     'setuptools-scm',
     'flit'
 ]
