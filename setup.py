@@ -101,7 +101,7 @@ setup(
         "botbuilder-dialogs==4.17.0",
         "botframework-streaming==4.17.0",
         "msal==1.32.0",
-        "msgraph-core==1.3.2",
+        "msgraph-core==1.3.5",
         "azure-identity==1.20.0",
         "helpers==0.2.0",
         "navconfig>=1.7.13",
