@@ -94,24 +94,18 @@ setup(
         "wheel==0.44.0"
     ],
     install_requires=[
-        "transitions==0.9.2",
-        "botbuilder-core==4.16.2",
-        "botbuilder-integration-aiohttp==4.16.2",
-        "botbuilder-schema==4.16.2",
-        "botbuilder-dialogs==4.16.2",
+        "transitions>=0.9.2",
+        "botbuilder-core==4.17.0",
+        "botbuilder-integration-aiohttp==4.17.0",
+        "botbuilder-schema==4.17.0",
+        "botbuilder-dialogs==4.17.0",
+        "botframework-streaming==4.17.0",
         "msal==1.32.0",
         "msgraph-core==1.3.2",
         "azure-identity==1.20.0",
         "helpers==0.2.0",
         "navconfig>=1.7.13",
-        "navigator-api==2.12.20",
-    ],
-    tests_require=[
-        'pytest>=5.4.0',
-        'coverage',
-        'pytest-asyncio',
-        'pytest-xdist',
-        'pytest-assume'
+        "navigator-api>=2.13.5",
     ],
     zip_safe=False,
     project_urls={  # Optional

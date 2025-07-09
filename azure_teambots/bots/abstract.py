@@ -101,11 +101,12 @@ class AbstractBot(ActivityHandler, MessageHandler):
     def id(self):
         return self._botid
 
-    def setup(self, app: web.Application):
-        if isinstance(app, BaseApplication):
-            self.app = app.get_app()
-        elif isinstance(app, WebApp):
-            self.app = app  # register the app into the Extension
+    def setup(self, app: web.Application = None):
+        if not self.app:
+            if isinstance(app, BaseApplication):
+                self.app = app.get_app()
+            elif isinstance(app, WebApp):
+                self.app = app  # register the app into the Extension
         # Memory and User State Management
         self._memory = MemoryStorage()
         # Use property setters to initialize accessors
@@ -127,6 +128,9 @@ class AbstractBot(ActivityHandler, MessageHandler):
             self.logger.error(
                 f"Auth Exclusion Error: {e}"
             )
+        # Register Startup and Cleanup handlers
+        self.app.on_startup.append(self.on_startup)
+        self.app.on_cleanup.append(self.on_cleanup)
 
     async def on_startup(self, app):
         """
@@ -197,7 +201,6 @@ class AbstractBot(ActivityHandler, MessageHandler):
 
     async def get_user_profile(self, turn_context: TurnContext) -> TeamsChannelAccount:
         # Check if the channel ID is 'msteams'
-        print('CAE AQUI PROFILE > ', turn_context.activity.channel_id)
         if turn_context.activity.channel_id == 'msteams':
             try:
                 return await TeamsInfo.get_member(
@@ -305,8 +308,19 @@ class AbstractBot(ActivityHandler, MessageHandler):
                             )
                         )
                     else:
+                        name = member.name or None
+                        if not name:
+                            user_profile = await self.get_user_profile(
+                                turn_context
+                            )
+                            if user_profile:
+                                name = user_profile.get('name', None)
+                        if not name:
+                            message = f"Hello!. {self.welcome_message}"
+                        else:
+                            message = f"Hello {name}. {self.welcome_message}"
                         await turn_context.send_activity(
-                            f"Hi there {member.name}. {self.welcome_message}"
+                            message
                         )
                         await turn_context.send_activity(self.info_message)
                 except Exception as e:
