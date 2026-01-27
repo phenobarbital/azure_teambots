@@ -49,6 +49,9 @@ jobs:
         run: ls -l dist
 
       - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.AZURETEAMBOTS_API_SECRET }}
         run: |
           uv tool install twine
-          uv tool run twine upload dist/* --username __token__ --password ${{ secrets.AZURETEAMBOTS_API_SECRET }}
+          uv tool run twine upload dist/*
