@@ -1,37 +1,167 @@
+# Azure Teams Bot Makefile
+# This Makefile provides a set of commands to manage the Azure Teams Bot project.
+
+.PHONY: venv install develop setup dev release format lint test clean distclean lock sync
+
+# Python version to use
+PYTHON_VERSION := 3.11
+
+# Auto-detect available tools
+HAS_UV := $(shell command -v uv 2> /dev/null)
+HAS_PIP := $(shell command -v pip 2> /dev/null)
+
+# Install uv for faster workflows
+install-uv:
+	curl -LsSf https://astral.sh/uv/install.sh | sh
+	@echo "uv installed! You may need to restart your shell or run 'source ~/.bashrc'"
+	@echo "Then re-run make commands to use faster uv workflows"
+
+# Create virtual environment
 venv:
-	python3.11 -m venv .venv
-	echo 'run `source .venv/bin/activate` to start develop Azure Teams bots'
+	uv venv --python $(PYTHON_VERSION) .venv
+	@echo 'run `source .venv/bin/activate` to start develop with azure_teambots.'
 
+# Install production dependencies using lock file
 install:
-	pip install -e .
-	pip install --upgrade navconfig[default]
-	pip install navigator-auth==0.15.4
-	pip install --upgrade navigator-api[locale,uvloop]
-	# Fix other dependencies:
-	pip install aiohttp==3.11.16
-	pip install jsonpickle==3.0.2
-	echo 'start using Azure Teams Bot'
+	uv lock
+	uv sync --frozen --no-dev
+	@echo "Production dependencies installed. Use 'make develop' for development setup."
 
-setup:
-	python -m pip install -Ur docs/requirements-dev.txt
+# Generate lock files (uv only)
+lock:
+ifdef HAS_UV
+	uv lock
+else
+	@echo "Lock files require uv. Install with: pip install uv"
+endif
 
-dev:
-	flit install --symlink
+# Install all dependencies including dev dependencies
+develop:
+	uv sync --frozen --extra dev
 
+# Alternative: install without lock file (faster for development)
+develop-fast:
+	uv pip install -e .[dev]
+
+# Build and publish release
 release: lint test clean
-	flit publish
+	uv build
+	uv publish
 
+# Format code
 format:
-	python -m black azure_teambots
+	uv run black azure_teambots
+	uv run isort azure_teambots
 
+# Lint code
 lint:
-	python -m pylint --rcfile .pylintrc azure_teambots/*.py
-	python -m black --check azure_teambots
+	uv run pylint --rcfile .pylintrc azure_teambots/*.py
+	uv run black --check azure_teambots
+	uv run isort --check-only azure_teambots
 
+# Run tests with coverage
 test:
-	python -m coverage run -m azure_teambots.tests
-	python -m coverage report
-	python -m mypy azure_teambots/*.py
+	uv run coverage run -m pytest tests/
+	uv run coverage report
+	uv run mypy azure_teambots/*.py
 
+# Alternative test command using pytest directly
+test-pytest:
+	uv run pytest tests/
+
+# Add new dependency and update lock file
+add:
+	@if [ -z "$(pkg)" ]; then echo "Usage: make add pkg=package-name"; exit 1; fi
+	uv add $(pkg)
+
+# Add development dependency
+add-dev:
+	@if [ -z "$(pkg)" ]; then echo "Usage: make add-dev pkg=package-name"; exit 1; fi
+	uv add --dev $(pkg)
+
+# Remove dependency
+remove:
+	@if [ -z "$(pkg)" ]; then echo "Usage: make remove pkg=package-name"; exit 1; fi
+	uv remove $(pkg)
+
+# Full build using uv
+build: clean
+	@echo "Building package with uv..."
+	uv build
+
+# Update all dependencies
+update:
+	uv lock --upgrade
+
+# Show project info
+info:
+	uv tree
+
+# Clean build artifacts
+clean:
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info/
+	find . -name "*.pyc" -delete
+	find . -name "*.pyo" -delete
+	find . -name "*.so" -delete
+	find . -type d -name __pycache__ -delete
+	find . -type f -name "*.pyc" -delete
+	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	@echo "Clean complete."
+
+# Remove virtual environment
 distclean:
 	rm -rf .venv
+	rm -rf uv.lock
+
+# Version management
+bump-patch:
+	@python -c "import re; \
+	content = open('azure_teambots/version.py').read(); \
+	version = re.search(r'__version__ = .(.+).', content).group(1); \
+	parts = version.split('.'); \
+	parts[2] = str(int(parts[2]) + 1); \
+	new_version = '.'.join(parts); \
+	new_content = re.sub(r'__version__ = ..+.', f'__version__ = \'{new_version}\'', content); \
+	open('azure_teambots/version.py', 'w').write(new_content); \
+	print(f'Version bumped to {new_version}')"
+
+bump-minor:
+	@python -c "import re; \
+	content = open('azure_teambots/version.py').read(); \
+	version = re.search(r'__version__ = .(.+).', content).group(1); \
+	parts = version.split('.'); \
+	parts[1] = str(int(parts[1]) + 1); \
+	parts[2] = '0'; \
+	new_version = '.'.join(parts); \
+	new_content = re.sub(r'__version__ = ..+.', f'__version__ = \'{new_version}\'', content); \
+	open('azure_teambots/version.py', 'w').write(new_content); \
+	print(f'Version bumped to {new_version}')"
+
+bump-major:
+	@python -c "import re; \
+	content = open('azure_teambots/version.py').read(); \
+	version = re.search(r'__version__ = .(.+).', content).group(1); \
+	parts = version.split('.'); \
+	parts[0] = str(int(parts[0]) + 1); \
+	parts[1] = '0'; \
+	parts[2] = '0'; \
+	new_version = '.'.join(parts); \
+	new_content = re.sub(r'__version__ = ..+.', f'__version__ = \'{new_version}\'', content); \
+	open('azure_teambots/version.py', 'w').write(new_content); \
+	print(f'Version bumped to {new_version}')"
+
+help:
+	@echo "Available targets:"
+	@echo "  venv         - Create virtual environment"
+	@echo "  install      - Install production dependencies"
+	@echo "  develop      - Install development dependencies"
+	@echo "  build        - Build package"
+	@echo "  release      - Build and publish package"
+	@echo "  test         - Run tests"
+	@echo "  format       - Format code"
+	@echo "  lint         - Lint code"
+	@echo "  clean        - Clean build artifacts"
+	@echo "  install-uv   - Install uv"
+	@echo ""
