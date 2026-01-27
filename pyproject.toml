@@ -103,9 +103,8 @@ packages = ["azure_teambots"]
 include-package-data = true
 zip-safe = false
 
-[tool.setuptools_scm]
-write_to = "azure_teambots/version.py"
-fallback_version = "0.0.0"
+[tool.setuptools.dynamic]
+version = {attr = "azure_teambots.version.__version__"}
 
 [tool.pytest.ini_options]
 minversion = "6.0"
